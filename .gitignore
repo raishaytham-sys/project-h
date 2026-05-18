@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+test_intervals.py
+diagnose_garth.py
