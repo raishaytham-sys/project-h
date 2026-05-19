@@ -1081,24 +1081,36 @@ function renderStreamCharts(streams, act) {
       if (i === 0) return null;
       const dAlt = alt - altData[i-1];
       if (dAlt <= 0) return null;
-      const dTime = timeData ? (timeData[i] - timeData[i-1]) / 60 : 1/60;
-      if (dTime <= 0) return null;
-      const raw = dAlt / dTime;
-      return raw > 300 ? null : Math.round(raw);
+      const dTimeSec = timeData ? (timeData[i] - timeData[i-1]) : 1;
+      if (dTimeSec <= 0) return null;
+      const raw = (dAlt / dTimeSec) * 3600; // m/h
+      return raw > 18000 ? null : raw;
     });
-    const smoothDplus = dplusRaw.map((val, i, arr) => {
-      if (val === null) return 0;
-      const slice = arr.slice(Math.max(0,i-20), i+20).filter(v=>v!==null);
-      return slice.length ? Math.round(slice.reduce((a,b)=>a+b,0)/slice.length) : 0;
-    });
+    // 10-min centered sliding average, O(n) two-pointer
+    const smoothDplus = new Array(dplusRaw.length).fill(0);
+    { let lo = 0, hi = 0, winSum = 0, winCount = 0;
+      const halfWin = 300; // ±5 min in seconds
+      for (let i = 0; i < dplusRaw.length; i++) {
+        const ti = timeData ? timeData[i] : i;
+        while (hi < dplusRaw.length && (timeData ? timeData[hi] : hi) <= ti + halfWin) {
+          if (dplusRaw[hi] !== null) { winSum += dplusRaw[hi]; winCount++; }
+          hi++;
+        }
+        while ((timeData ? timeData[lo] : lo) < ti - halfWin) {
+          if (dplusRaw[lo] !== null) { winSum -= dplusRaw[lo]; winCount--; }
+          lo++;
+        }
+        smoothDplus[i] = winCount ? Math.round(winSum / winCount) : 0;
+      }
+    }
     const ctx = document.getElementById('dplusChart').getContext('2d');
     const dplusClr = document.documentElement.dataset.theme==='dark' ? '#3CB870' : '#2A7A50';
     const dplusDS = { data:smoothDplus, fill:true, backgroundColor:makeGrad(ctx,dplusClr), borderColor:dplusClr, borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
-    S._dplusChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[dplusDS]}, options: baseOpts(smoothDplus.filter(v=>v>0), 'm/min', c=>`${Math.round(c.raw)} m/min`) });
+    S._dplusChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[dplusDS]}, options: baseOpts(smoothDplus.filter(v=>v>0), 'm/h', c=>`${Math.round(c.raw)} m/h`) });
     const posVals = smoothDplus.filter(v=>v>0);
     const avgDplus = posVals.length ? Math.round(posVals.reduce((a,b)=>a+b,0)/posVals.length) : 0;
     const maxDplus = posVals.length ? Math.round(Math.max(...posVals)) : 0;
-    $('dplusStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgDplus} m/min</strong></span><span class="elev-stat-mini">Max <strong>${maxDplus} m/min</strong></span>`;
+    $('dplusStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgDplus} m/h</strong></span><span class="elev-stat-mini">Max <strong>${maxDplus} m/h</strong></span>`;
   } else {
     dplusCard.style.display = 'none';
   }
