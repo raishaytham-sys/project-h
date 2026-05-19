@@ -943,7 +943,7 @@ function renderElev(streams,act){
   if(!alts.length){$('elevStats').innerHTML='';return}
   const dists=streams.distance?streams.distance.map(d=>(d/1000).toFixed(2)):alts.map((_,i)=>((i/alts.length)*(act.distance||10000)/1000).toFixed(2));
   const minA=Math.min(...alts),maxA=Math.max(...alts);
-  $('elevStats').innerHTML=`<span class="elev-stat-mini">Min <strong>${Math.round(minA)} m</strong></span><span class="elev-stat-mini">Max <strong>${Math.round(maxA)} m</strong></span><span class="elev-stat-mini">D+ <strong>${Math.round(act.total_elevation_gain||0)} m</strong></span>`;
+  $('elevStats').innerHTML=`<span class="elev-stat-mini">Min <strong>${Math.round(minA)} m</strong></span><span class="elev-stat-mini">Max <strong>${Math.round(maxA)} m</strong></span>`;
   try{
     const isDark=document.documentElement.dataset.theme==='dark';
     const g=typeOf(act.type)||'run';
@@ -1024,9 +1024,9 @@ function renderStreamCharts(streams, act) {
             drag: { enabled: true, backgroundColor: dk?'rgba(255,255,255,.07)':'rgba(31,45,92,.07)', borderColor: dk?'rgba(255,255,255,.25)':'rgba(31,45,92,.25)', borderWidth: 1 },
             wheel: { enabled: true },
             pinch: { enabled: true },
-            mode: 'x',
+            mode: 'xy',
           },
-          limits: { x: { min: 'original', max: 'original' } }
+          limits: { x: { min: 'original', max: 'original' }, y: { min: 'original', max: 'original' } }
         }
       },
       scales: {
@@ -1126,11 +1126,11 @@ function renderStreamCharts(streams, act) {
     const hrDS = { data:streams.heartrate, fill:false, borderColor:'#E53935', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
     const MHR = 203;
     const hrZones = [
-      { min:   0, max: Math.round(MHR*.60), color:'#5DBF8722' },
-      { min: Math.round(MHR*.60), max: Math.round(MHR*.70), color:'#8BC34A22' },
-      { min: Math.round(MHR*.70), max: Math.round(MHR*.80), color:'#FFD54F22' },
-      { min: Math.round(MHR*.80), max: Math.round(MHR*.90), color:'#FF8C5A28' },
-      { min: Math.round(MHR*.90), max: 230, color:'#E5393528' },
+      { min:   0,              max: Math.round(MHR*.60) },
+      { min: Math.round(MHR*.60), max: Math.round(MHR*.70) },
+      { min: Math.round(MHR*.70), max: Math.round(MHR*.80) },
+      { min: Math.round(MHR*.80), max: Math.round(MHR*.90) },
+      { min: Math.round(MHR*.90), max: 230 },
     ];
     const zoneBandsPlugin = {
       id: 'zoneBands',
@@ -1138,14 +1138,24 @@ function renderStreamCharts(streams, act) {
         const zones = chart.options.plugins?.zoneBands?.zones;
         if (!zones) return;
         const { ctx: c, chartArea: ca, scales: { y } } = chart;
+        const dk = document.documentElement.dataset.theme === 'dark';
         c.save();
-        zones.forEach(({ min, max, color }) => {
-          const top    = Math.max(ca.top,    y.getPixelForValue(max));
-          const bottom = Math.min(ca.bottom, y.getPixelForValue(min));
-          if (bottom <= top) return;
-          c.fillStyle = color;
-          c.fillRect(ca.left, top, ca.right - ca.left, bottom - top);
+        const grad = c.createLinearGradient(0, ca.top, 0, ca.bottom);
+        grad.addColorStop(0,    dk ? 'rgba(229,57,53,.13)'   : 'rgba(229,57,53,.09)');
+        grad.addColorStop(0.35, dk ? 'rgba(255,140,60,.06)'  : 'rgba(255,140,60,.05)');
+        grad.addColorStop(0.7,  dk ? 'rgba(255,210,60,.03)'  : 'rgba(255,210,60,.03)');
+        grad.addColorStop(1,    dk ? 'rgba(80,200,140,.015)' : 'rgba(80,200,140,.01)');
+        c.fillStyle = grad;
+        c.fillRect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
+        c.setLineDash([3, 4]);
+        c.lineWidth = 0.75;
+        c.strokeStyle = dk ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.07)';
+        zones.slice(0, -1).forEach(({ max }) => {
+          const py = y.getPixelForValue(max);
+          if (py < ca.top || py > ca.bottom) return;
+          c.beginPath(); c.moveTo(ca.left, py); c.lineTo(ca.right, py); c.stroke();
         });
+        c.setLineDash([]);
         c.restore();
       }
     };
