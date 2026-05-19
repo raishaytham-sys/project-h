@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <style>
 :root{
   --bg:#F3F5F9;--surface:#FFF;--surface2:#EDF0F6;--border:#E0E5EF;--border2:#C8D0E2;
@@ -431,6 +433,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="elev-hd-stats" id="paceStats"></div>
       </div>
       <div class="elev-body"><canvas id="paceChart" height="140"></canvas></div>
+      <div style="text-align:right;padding:4px 14px 8px"><button onclick="resetZoom(this)" data-chart="paceChart" style="font-size:10px;font-family:'Geist Mono',monospace;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.5px">RESET</button></div>
+    </div>
+
+    <div class="elev-card" id="dplusCard" style="margin-top:12px;display:none">
+      <div class="elev-hd">
+        <span class="elev-hd-title">Vertical Speed</span>
+        <div class="elev-hd-stats" id="dplusStats"></div>
+      </div>
+      <div class="elev-body"><canvas id="dplusChart" height="140"></canvas></div>
+      <div style="text-align:right;padding:4px 14px 8px"><button onclick="resetZoom(this)" data-chart="dplusChart" style="font-size:10px;font-family:'Geist Mono',monospace;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.5px">RESET</button></div>
     </div>
 
     <div class="elev-card" style="margin-top:12px">
@@ -439,6 +451,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="elev-hd-stats" id="hrStats"></div>
       </div>
       <div class="elev-body"><canvas id="hrChart" height="140"></canvas></div>
+      <div style="text-align:right;padding:4px 14px 8px"><button onclick="resetZoom(this)" data-chart="hrChart" style="font-size:10px;font-family:'Geist Mono',monospace;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.5px">RESET</button></div>
     </div>
 
     <div class="elev-card" id="wattsCard" style="margin-top:12px;display:none">
@@ -447,6 +460,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="elev-hd-stats" id="wattsStats"></div>
       </div>
       <div class="elev-body"><canvas id="wattsChart" height="140"></canvas></div>
+      <div style="text-align:right;padding:4px 14px 8px"><button onclick="resetZoom(this)" data-chart="wattsChart" style="font-size:10px;font-family:'Geist Mono',monospace;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.5px">RESET</button></div>
     </div>
   </div>
 
@@ -724,7 +738,7 @@ function fmtDist(m){return((m||0)/1000).toFixed(1)+' km'}
 function fmtElev(m){return'+'+Math.round(m||0).toLocaleString()+' m'}
 function fmtTime(s){const h=Math.floor((s||0)/3600),m=Math.floor((s||0)%3600/60);return h?`${h}h${String(m).padStart(2,'0')}`:`${m}min`}
 function fmtPace(s,dist){if(!s||!dist||dist<1)return'—';const spk=s/(dist/1000),mn=Math.floor(spk/60),sc=Math.round(spk%60);return`${mn}'${String(sc).padStart(2,'0')}"`}
-function fmtPaceClean(s,dist){if(!s||!dist||dist<1)return{val:'—',unit:''};const spk=s/(dist/1000),mn=Math.floor(spk/60),sc=Math.round(spk%60);return{val:`${mn}:${String(sc).padStart(2,'0')}`,unit:'/km'}}
+function fmtPaceClean(s,dist,type){const g=typeOf(type);if(g==='bike'){if(!s||!dist)return{val:'—',unit:''};const kmh=Math.round((dist/1000)/(s/3600)*10)/10;return{val:kmh.toFixed(1),unit:'km/h'}}if(!s||!dist||dist<1)return{val:'—',unit:''};const spk=s/(dist/1000),mn=Math.floor(spk/60),sc=Math.round(spk%60);return{val:`${mn}:${String(sc).padStart(2,'0')}`,unit:'/km'}}
 function fmtDurClean(s){const h=Math.floor((s||0)/3600),m=Math.floor((s||0)%3600/60);if(h===0)return{val:m,unit:'min'};return{val:`${h}:${String(m).padStart(2,'0')}`,unit:'h'}}
 function fmtDate(iso){try{const d=new Date(iso),loc={en:'en-GB',fr:'fr-FR',it:'it-IT'}[S.lang]||'en-GB';return d.toLocaleDateString(loc,{weekday:'short',day:'numeric',month:'short'})}catch{return iso?.slice(0,10)||''}}
 
@@ -825,9 +839,10 @@ async function openDetail(id){
     const dur = fmtDurClean(act.moving_time);
     $('ds-time').textContent = dur.val;
     $('ds-time-unit').textContent = dur.unit;
-    const pc = fmtPaceClean(act.moving_time, act.distance);
+    const pc = fmtPaceClean(act.moving_time, act.distance, act.type);
     $('ds-pace').textContent = pc.val;
     $('ds-pace-unit').textContent = pc.unit;
+    $('lbl-pace').textContent = typeOf(act.type) === 'bike' ? 'SPEED' : t('pace');
     $('ds-hr').textContent = act.average_heartrate ? Math.round(act.average_heartrate) : '—';
     $('ds-hr-unit').textContent = act.average_heartrate ? 'bpm' : '';
     $('ds-hrmax').textContent = act.max_heartrate ? Math.round(act.max_heartrate) : '—';
@@ -937,10 +952,15 @@ function renderElev(streams,act){
 
 function renderHR(streams,act){
   const hrData=streams?.heartrate||[];
-  const zones=[{lbl:'Z1',range:'< 60%',color:'#5DBF87',pct:0},{lbl:'Z2',range:'60–70%',color:'#8BC34A',pct:0},{lbl:'Z3',range:'70–80%',color:'#FFD54F',pct:0},{lbl:'Z4',range:'80–90%',color:'#FF8C5A',pct:0},{lbl:'Z5',range:'> 90%',color:'#E53935',pct:0}];
-  const streamMax = hrData.length ? Math.max(...hrData) : 0;
-  const maxHR = streamMax > 100 ? streamMax : (act.max_heartrate || 185);
-  const bounds = [0, maxHR*0.60, maxHR*0.70, maxHR*0.80, maxHR*0.90, maxHR+1];
+  const maxHR = 203;
+  const zones=[
+    {lbl:'Z1',range:`< ${Math.round(maxHR*.60)} bpm`,color:'#5DBF87',pct:0},
+    {lbl:'Z2',range:`${Math.round(maxHR*.60)}–${Math.round(maxHR*.70)}`,color:'#8BC34A',pct:0},
+    {lbl:'Z3',range:`${Math.round(maxHR*.70)}–${Math.round(maxHR*.80)}`,color:'#FFD54F',pct:0},
+    {lbl:'Z4',range:`${Math.round(maxHR*.80)}–${Math.round(maxHR*.90)}`,color:'#FF8C5A',pct:0},
+    {lbl:'Z5',range:`> ${Math.round(maxHR*.90)} bpm`,color:'#E53935',pct:0}
+  ];
+  const bounds=[0,maxHR*.60,maxHR*.70,maxHR*.80,maxHR*.90,maxHR+1];
   if(hrData.length){
     hrData.forEach(h=>{for(let i=0;i<5;i++)if(h>=bounds[i]&&h<bounds[i+1]){zones[i].pct++;break}});
     const tot=hrData.length;zones.forEach(z=>z.pct=Math.round(z.pct/tot*100));
@@ -949,13 +969,12 @@ function renderHR(streams,act){
 }
 
 function renderStreamCharts(streams, act) {
-  ['_paceChart','_hrChart','_wattsChart'].forEach(k => {
+  ['_paceChart','_hrChart','_wattsChart','_dplusChart'].forEach(k => {
     if (S[k]) { try { S[k].destroy(); } catch(e) {} S[k] = null; }
   });
 
   const g = typeOf(act.type) || 'run';
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const lineClr = isDark
+  const lineClr = document.documentElement.dataset.theme === 'dark'
     ? {run:'#4D70D8',trail:'#2AACC4',hike:'#3CB870',bike:'#C07848'}[g]
     : {run:'#2D4BAF',trail:'#1A7A8C',hike:'#2A7A50',bike:'#8C5530'}[g];
 
@@ -972,8 +991,9 @@ function renderStreamCharts(streams, act) {
     gr.addColorStop(0, color+'28'); gr.addColorStop(1, color+'04'); return gr;
   }
 
-  const baseOpts = (unit, fmtLabel) => {
+  const baseOpts = (data, unit, fmtLabel) => {
     const dk = document.documentElement.dataset.theme === 'dark';
+    const range = yRange(data);
     return {
       responsive: true,
       animation: { duration: 400 },
@@ -989,25 +1009,34 @@ function renderStreamCharts(streams, act) {
           cornerRadius: 8,
           titleColor: dk?'#E2EAF8':'#0A1628',
           bodyColor: dk?'#6878A0':'#4A5878',
+          displayColors: false,
           titleFont: { family:'Geist Mono', size:11 },
           bodyFont: { family:'Geist Mono', size:13, weight:'500' },
-          displayColors: false,
-          callbacks: {
-            title: c => `${c[0].label} km`,
-            label: fmtLabel
-          }
+          callbacks: { title: c=>`${c[0].label} km`, label: fmtLabel }
+        },
+        zoom: {
+          pan: { enabled: true, mode: 'x' },
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+          limits: { x: { min: 'original', max: 'original' } }
         }
       },
       scales: {
         x: { grid:{display:false}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},maxTicksLimit:8}, border:{display:false} },
-        y: { grid:{color:dk?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},callback:v=>v+' '+unit}, border:{display:false} }
+        y: { min:range.min, max:range.max, grid:{color:dk?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},callback:v=>v+' '+unit}, border:{display:false} }
       }
     };
   };
 
+  const DS = (data, color, extra={}) => ({
+    data, fill:true, backgroundColor:makeGrad(document.createElement('canvas').getContext('2d'), color),
+    borderColor:color, borderWidth:1.8,
+    pointRadius:0, pointHoverRadius:0, pointStyle:false,
+    tension:.3, ...extra
+  });
+
   // Pace / Speed
   const isBike = g === 'bike';
-  document.getElementById('paceChartTitle').textContent = isBike ? 'Speed' : 'Pace';
+  document.getElementById('paceChartTitle').textContent = isBike ? 'Speed (km/h)' : 'Pace';
   document.getElementById('paceCard').style.display = streams.velocity_smooth?.length ? '' : 'none';
   if (streams.velocity_smooth?.length) {
     const SMOOTH = 8;
@@ -1021,76 +1050,113 @@ function renderStreamCharts(streams, act) {
         });
     const paceData = rawPace.map((val, i, arr) => {
       if (val === null) return null;
-      const slice = arr.slice(Math.max(0,i-SMOOTH), i+SMOOTH+1).filter(v => v !== null);
+      const slice = arr.slice(Math.max(0,i-SMOOTH), i+SMOOTH+1).filter(v=>v!==null);
       return slice.length ? Math.round(slice.reduce((a,b)=>a+b,0)/slice.length*10)/10 : null;
     });
     const ctx = document.getElementById('paceChart').getContext('2d');
-    S._paceChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:paceData, fill:true, backgroundColor:makeGrad(ctx,lineClr), borderColor:lineClr, borderWidth:1.8, pointRadius:0, tension:.3, spanGaps:true }]}, options: baseOpts(isBike?'km/h':'min/km', c => c.raw ? (isBike?`${c.raw} km/h`:`${c.raw} min/km`) : '') });
-    const validPace = paceData.filter(v => v !== null);
+    const paceDS = { data:paceData, fill:true, backgroundColor:makeGrad(ctx,lineClr), borderColor:lineClr, borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3, spanGaps:true };
+    S._paceChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[paceDS]}, options: baseOpts(paceData, isBike?'km/h':'min/km', c => c.raw ? (isBike?`${c.raw} km/h`:`${c.raw} min/km`) : '') });
+    const validPace = paceData.filter(v=>v!==null);
     if (validPace.length) {
       const avgP = validPace.reduce((a,b)=>a+b,0)/validPace.length;
       const bestP = isBike ? Math.max(...validPace) : Math.min(...validPace);
       const fmtP = v => { const m=Math.floor(v),s=Math.round((v-m)*60); return `${m}:${String(s).padStart(2,'0')}`; };
-      const unitLbl = isBike ? 'km/h' : '';
       $('paceStats').innerHTML = isBike
         ? `<span class="elev-stat-mini">Avg <strong>${avgP.toFixed(1)} km/h</strong></span><span class="elev-stat-mini">Max <strong>${bestP.toFixed(1)} km/h</strong></span>`
         : `<span class="elev-stat-mini">Avg <strong>${fmtP(avgP)}</strong></span><span class="elev-stat-mini">Best <strong>${fmtP(bestP)}</strong></span>`;
     }
   }
 
+  // D+/min (trail & hike seulement)
+  const dplusCard = document.getElementById('dplusCard');
+  if (['trail','hike'].includes(g) && streams.altitude?.length && dists.length) {
+    dplusCard.style.display = '';
+    const altData = streams.altitude;
+    const timeData = streams.time;
+    const dplusRaw = altData.map((alt, i) => {
+      if (i === 0) return null;
+      const dAlt = alt - altData[i-1];
+      if (dAlt <= 0) return null;
+      const dTime = timeData ? (timeData[i] - timeData[i-1]) / 60 : 1/60;
+      if (dTime <= 0) return null;
+      const raw = dAlt / dTime;
+      return raw > 300 ? null : Math.round(raw);
+    });
+    const smoothDplus = dplusRaw.map((val, i, arr) => {
+      if (val === null) return 0;
+      const slice = arr.slice(Math.max(0,i-20), i+20).filter(v=>v!==null);
+      return slice.length ? Math.round(slice.reduce((a,b)=>a+b,0)/slice.length) : 0;
+    });
+    const ctx = document.getElementById('dplusChart').getContext('2d');
+    const dplusClr = document.documentElement.dataset.theme==='dark' ? '#3CB870' : '#2A7A50';
+    const dplusDS = { data:smoothDplus, fill:true, backgroundColor:makeGrad(ctx,dplusClr), borderColor:dplusClr, borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
+    S._dplusChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[dplusDS]}, options: baseOpts(smoothDplus.filter(v=>v>0), 'm/min', c=>`${Math.round(c.raw)} m/min`) });
+    const posVals = smoothDplus.filter(v=>v>0);
+    const avgDplus = posVals.length ? Math.round(posVals.reduce((a,b)=>a+b,0)/posVals.length) : 0;
+    const maxDplus = posVals.length ? Math.round(Math.max(...posVals)) : 0;
+    $('dplusStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgDplus} m/min</strong></span><span class="elev-stat-mini">Max <strong>${maxDplus} m/min</strong></span>`;
+  } else {
+    dplusCard.style.display = 'none';
+  }
+
   // Heart Rate
   if (streams.heartrate?.length) {
     const ctx = document.getElementById('hrChart').getContext('2d');
-    S._hrChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:streams.heartrate, fill:true, backgroundColor:makeGrad(ctx,'#E53935'), borderColor:'#E53935', borderWidth:1.8, pointRadius:0, tension:.3 }]}, options: baseOpts('bpm', c => `${Math.round(c.raw)} bpm`) });
+    const hrDS = { data:streams.heartrate, fill:true, backgroundColor:makeGrad(ctx,'#E53935'), borderColor:'#E53935', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
+    S._hrChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[hrDS]}, options: baseOpts(streams.heartrate, 'bpm', c=>`${Math.round(c.raw)} bpm`) });
     const avgHR2 = Math.round(streams.heartrate.reduce((a,b)=>a+b,0)/streams.heartrate.length);
     const maxHR2 = Math.round(Math.max(...streams.heartrate));
     $('hrStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgHR2} bpm</strong></span><span class="elev-stat-mini">Max <strong>${maxHR2} bpm</strong></span>`;
   }
 
   // Watts
-  const wattsArr2 = streams.watts?.filter(w => w > 0) || [];
+  const wattsArr2 = streams.watts?.filter(w=>w>0) || [];
   const wattsCard = document.getElementById('wattsCard');
   if (wattsArr2.length) {
     wattsCard.style.display = '';
     const avgW2 = Math.round(wattsArr2.reduce((a,b)=>a+b,0)/wattsArr2.length);
     const maxW2 = Math.round(Math.max(...wattsArr2));
-    const smoothW = streams.watts.map((w,i,arr) => {
-      const sl = arr.slice(Math.max(0,i-5),i+6);
-      return Math.round(sl.reduce((a,b)=>a+b,0)/sl.length);
-    });
+    const smoothW = streams.watts.map((w,i,arr) => { const sl=arr.slice(Math.max(0,i-5),i+6); return Math.round(sl.reduce((a,b)=>a+b,0)/sl.length); });
     const ctx = document.getElementById('wattsChart').getContext('2d');
-    S._wattsChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:smoothW, fill:true, backgroundColor:makeGrad(ctx,'#9B59B6'), borderColor:'#9B59B6', borderWidth:1.8, pointRadius:0, tension:.3 }]}, options: baseOpts('W', c => `${Math.round(c.raw)} W`) });
+    const wDS = { data:smoothW, fill:true, backgroundColor:makeGrad(ctx,'#9B59B6'), borderColor:'#9B59B6', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
+    S._wattsChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[wDS]}, options: baseOpts(smoothW, 'W', c=>`${Math.round(c.raw)} W`) });
     $('wattsStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgW2} W</strong></span><span class="elev-stat-mini">Max <strong>${maxW2} W</strong></span>`;
   } else {
     wattsCard.style.display = 'none';
   }
 
   // Touch scrubbing
-  ['paceChart','hrChart','wattsChart'].forEach(canvasId => {
+  ['paceChart','dplusChart','hrChart','wattsChart'].forEach(canvasId => {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
+    const chartKey = canvasId==='paceChart'?'_paceChart':canvasId==='hrChart'?'_hrChart':canvasId==='wattsChart'?'_wattsChart':'_dplusChart';
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      const touch = e.touches[0];
-      const chartKey = canvasId === 'paceChart' ? '_paceChart'
-                     : canvasId === 'hrChart'   ? '_hrChart'
-                     : '_wattsChart';
-      const chart = S[chartKey];
-      if (!chart) return;
-      chart.canvas.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        bubbles: true
-      }));
+      const chart = S[chartKey]; if (!chart) return;
+      const t = e.touches[0];
+      chart.canvas.dispatchEvent(new MouseEvent('mousemove', {clientX:t.clientX,clientY:t.clientY,bubbles:true}));
     }, { passive: false });
     canvas.addEventListener('touchend', () => {
-      const chartKey = canvasId === 'paceChart' ? '_paceChart'
-                     : canvasId === 'hrChart'   ? '_hrChart'
-                     : '_wattsChart';
       const chart = S[chartKey];
-      if (chart) { chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }
+      if (chart) { chart.tooltip.setActiveElements([],{x:0,y:0}); chart.update('none'); }
     }, { passive: true });
   });
+}
+
+function yRange(data, coverage=0.95) {
+  const valid = data.filter(v=>v!==null&&v!==undefined&&!isNaN(v)).sort((a,b)=>a-b);
+  if (!valid.length) return {min:undefined,max:undefined};
+  const cut=(1-coverage)/2;
+  const lo=valid[Math.floor(cut*valid.length)];
+  const hi=valid[Math.floor((1-cut)*valid.length)];
+  const pad=(hi-lo)*0.08;
+  return {min:Math.floor(lo-pad),max:Math.ceil(hi+pad)};
+}
+
+function resetZoom(btn) {
+  const id = btn.getAttribute('data-chart');
+  const key = id==='paceChart'?'_paceChart':id==='hrChart'?'_hrChart':id==='wattsChart'?'_wattsChart':'_dplusChart';
+  if (S[key]) S[key].resetZoom();
 }
 
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800)}

@@ -19,6 +19,7 @@ INTERVALS_API_KEY = "3f1cwe6lade0tfoupus7uj85z"
 ATHLETE_ID = "i586352"
 AUTH = ("API_KEY", INTERVALS_API_KEY)
 BASE_URL = "https://intervals.icu/api/v1"
+ATHLETE_MAX_HR = 203
 
 TYPE_MAP = {
     "run": ["Run", "VirtualRun", "TrailRun"],
@@ -29,6 +30,10 @@ TYPE_MAP = {
 @app.get("/")
 def serve_frontend():
     return FileResponse("index.html")
+
+@app.get("/api/athlete")
+def get_athlete():
+    return {"max_hr": ATHLETE_MAX_HR, "resting_hr": 50}
 
 @app.get("/api/activities")
 def get_activities(type: str = "all", weeks: int = 24):
