@@ -183,7 +183,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .detail-act-type svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
 .detail-act-name{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px;margin-bottom:2px}
 .detail-act-date{font-family:'Geist Mono',monospace;font-size:12px;color:var(--text3)}
-.stats-strip{display:grid;grid-template-columns:repeat(7,1fr);background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.stats-strip{display:grid;grid-template-columns:repeat(8,1fr);background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
 .ds-cell{background:var(--surface);padding:16px 18px;border-right:1px solid var(--border)}
 .ds-cell:last-child{border-right:none}
 .ds-icon{width:26px;height:26px;border-radius:5px;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
@@ -282,7 +282,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <span id="lbl-all">All</span>
         </button>
         <button class="type-btn" data-type="run" onclick="clickType('run',this)">
-          <svg viewBox="0 0 24 24"><circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5 L6 7"/></svg>
           <span id="lbl-run">Run</span>
         </button>
         <button class="type-btn" data-type="trail" onclick="clickType('trail',this)">
@@ -404,6 +404,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ds-val" id="ds-time">—</div><span class="ds-unit" id="ds-time-unit">h</span><div class="ds-lbl" id="lbl-dur">Duration</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="ds-val" id="ds-pace">—</div><span class="ds-unit" id="ds-pace-unit">/km</span><div class="ds-lbl" id="lbl-pace">Pace</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div class="ds-val" id="ds-hr">—</div><span class="ds-unit" id="ds-hr-unit">bpm</span><div class="ds-lbl" id="lbl-avghr">Avg HR</div></div>
+      <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div class="ds-val" id="ds-hrmax">—</div><span class="ds-unit" id="ds-hrmax-unit">bpm</span><div class="ds-lbl" id="lbl-maxhr">Max HR</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="ds-val" id="ds-watts">—</div><span class="ds-unit" id="ds-watts-unit"></span><div class="ds-lbl">Avg W</div></div>
     </div>
 
@@ -474,9 +475,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <script>
 // ── i18n ──────────────────────────────────────────────────────
 const LANG={
-  en:{logo:'Project',all:'All',run:'Run',trail:'Trail',hike:'Hike',bike:'Bike',dur:'DUR',weekly:'Weekly Volume',sync:'Sync',kacts:'Activities',kdist:'Distance',kelev:'Elevation',ktime:'Duration',recent:'Recent Activities',noacts:'No activities',noacts2:'Click Sync to load your Intervals.icu data, or enable Demo mode.',target:'TARGET RACE',days:'DAYS',hrs:'HRS',back:'Back',dist:'Distance',elev:'Elevation',dur2:'Duration',pace:'Pace',avghr:'Avg HR',desc:'Descent',gps:'GPS Track',hrzones:'HR Zones',elevprofile:'Elevation Profile',weekof:'Week of',demoon:'Demo mode on',demooff:'Demo mode off',synced:'activities loaded',syncerr:'Connection error — try Demo mode',tRun:'Run',tTrail:'Trail',tHike:'Hike',tBike:'Bike',tOther:'Activity',gpsna:'GPS data unavailable'},
-  fr:{logo:'Projet',all:'Tout',run:'Course',trail:'Trail',hike:'Rando',bike:'Vélo',dur:'DURÉE',weekly:'Volume Hebdomadaire',sync:'Sync',kacts:'Activités',kdist:'Distance',kelev:'Dénivelé',ktime:'Durée',recent:'Activités récentes',noacts:'Aucune activité',noacts2:'Clique sur Sync pour charger tes données, ou active le mode Demo.',target:'OBJECTIF',days:'JOURS',hrs:'HRS',back:'Retour',dist:'Distance',elev:'Dénivelé',dur2:'Durée',pace:'Allure',avghr:'FC moy.',desc:'Descente',gps:'Tracé GPS',hrzones:'Zones cardiaques',elevprofile:'Profil altimétrique',weekof:'Semaine du',demoon:'Mode démo activé',demooff:'Mode démo désactivé',synced:'activités chargées',syncerr:'Erreur de connexion',tRun:'Course',tTrail:'Trail',tHike:'Rando',tBike:'Vélo',tOther:'Activité',gpsna:'Données GPS non disponibles'},
-  it:{logo:'Progetto',all:'Tutto',run:'Corsa',trail:'Trail',hike:'Escursione',bike:'Ciclismo',dur:'DURATA',weekly:'Volume Settimanale',sync:'Sync',kacts:'Attività',kdist:'Distanza',kelev:'Dislivello',ktime:'Durata',recent:'Attività recenti',noacts:'Nessuna attività',noacts2:'Clicca Sync per caricare i tuoi dati, o attiva la modalità Demo.',target:'OBIETTIVO',days:'GIORNI',hrs:'ORE',back:'Indietro',dist:'Distanza',elev:'Dislivello',dur2:'Durata',pace:'Ritmo',avghr:'FC media',desc:'Discesa',gps:'Tracciato GPS',hrzones:'Zone cardiache',elevprofile:'Profilo altimetrico',weekof:'Settimana del',demoon:'Modalità demo attiva',demooff:'Modalità demo disattiva',synced:'attività caricate',syncerr:'Errore di connessione',tRun:'Corsa',tTrail:'Trail',tHike:'Escursione',tBike:'Ciclismo',tOther:'Attività',gpsna:'Dati GPS non disponibili'}
+  en:{logo:'Project',all:'All',run:'Run',trail:'Trail',hike:'Hike',bike:'Bike',dur:'DUR',weekly:'Weekly Volume',sync:'Sync',kacts:'Activities',kdist:'Distance',kelev:'Elevation',ktime:'Duration',recent:'Recent Activities',noacts:'No activities',noacts2:'Click Sync to load your Intervals.icu data, or enable Demo mode.',target:'TARGET RACE',days:'DAYS',hrs:'HRS',back:'Back',dist:'Distance',elev:'Elevation',dur2:'Duration',pace:'Pace',avghr:'Avg HR',maxhr:'Max HR',desc:'Descent',gps:'GPS Track',hrzones:'HR Zones',elevprofile:'Elevation Profile',weekof:'Week of',demoon:'Demo mode on',demooff:'Demo mode off',synced:'activities loaded',syncerr:'Connection error — try Demo mode',tRun:'Run',tTrail:'Trail',tHike:'Hike',tBike:'Bike',tOther:'Activity',gpsna:'GPS data unavailable'},
+  fr:{logo:'Projet',all:'Tout',run:'Course',trail:'Trail',hike:'Rando',bike:'Vélo',dur:'DURÉE',weekly:'Volume Hebdomadaire',sync:'Sync',kacts:'Activités',kdist:'Distance',kelev:'Dénivelé',ktime:'Durée',recent:'Activités récentes',noacts:'Aucune activité',noacts2:'Clique sur Sync pour charger tes données, ou active le mode Demo.',target:'OBJECTIF',days:'JOURS',hrs:'HRS',back:'Retour',dist:'Distance',elev:'Dénivelé',dur2:'Durée',pace:'Allure',avghr:'FC moy.',maxhr:'FC max',desc:'Descente',gps:'Tracé GPS',hrzones:'Zones cardiaques',elevprofile:'Profil altimétrique',weekof:'Semaine du',demoon:'Mode démo activé',demooff:'Mode démo désactivé',synced:'activités chargées',syncerr:'Erreur de connexion',tRun:'Course',tTrail:'Trail',tHike:'Rando',tBike:'Vélo',tOther:'Activité',gpsna:'Données GPS non disponibles'},
+  it:{logo:'Progetto',all:'Tutto',run:'Corsa',trail:'Trail',hike:'Escursione',bike:'Ciclismo',dur:'DURATA',weekly:'Volume Settimanale',sync:'Sync',kacts:'Attività',kdist:'Distanza',kelev:'Dislivello',ktime:'Durata',recent:'Attività recenti',noacts:'Nessuna attività',noacts2:'Clicca Sync per caricare i tuoi dati, o attiva la modalità Demo.',target:'OBIETTIVO',days:'GIORNI',hrs:'ORE',back:'Indietro',dist:'Distanza',elev:'Dislivello',dur2:'Durata',pace:'Ritmo',avghr:'FC media',maxhr:'FC max',desc:'Discesa',gps:'Tracciato GPS',hrzones:'Zone cardiache',elevprofile:'Profilo altimetrico',weekof:'Settimana del',demoon:'Modalità demo attiva',demooff:'Modalità demo disattiva',synced:'attività caricate',syncerr:'Errore di connessione',tRun:'Corsa',tTrail:'Trail',tHike:'Escursione',tBike:'Ciclismo',tOther:'Attività',gpsna:'Dati GPS non disponibili'}
 };
 
 // ── Constants ──────────────────────────────────────────────────
@@ -485,7 +486,7 @@ const RACE=new Date('2027-10-01T06:00:00');
 const CHART_H=180,BAR_W=32,BAR_GAP=5;
 const GROUPS={run:['Run','VirtualRun'],trail:['TrailRun'],hike:['Hike'],bike:['Ride','VirtualRide','EBikeRide','MountainBikeRide']};
 const ICONS={
-  run:'<circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5"/>',
+  run:'<circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5 L6 7"/>',
   trail:'<path d="M3 17l4-7 3 4 3-5 4 8"/><path d="M3 20h18"/>',
   hike:'<path d="M3 20l5-10 4 6 3-4 6 8"/>',
   bike:'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3.5-3 4-4 2.5 3H19"/>',
@@ -556,6 +557,7 @@ function applyLang(){
   $('lbl-dur').textContent=t('dur2');
   $('lbl-pace').textContent=t('pace');
   $('lbl-avghr').textContent=t('avghr');
+  $('lbl-maxhr').textContent=t('maxhr');
   $('lbl-desc').textContent=t('desc');
   $('lbl-gps').textContent=t('gps');
   $('lbl-hrzones').textContent=t('hrzones');
@@ -857,6 +859,8 @@ async function openDetail(id){
     const wattsArr = streams?.watts?.filter(w => 0 < w) || [];
     const avgW = wattsArr.length ? Math.round(wattsArr.reduce((a,b)=>a+b,0)/wattsArr.length) : null;
     const maxW = wattsArr.length ? Math.round(Math.max(...wattsArr)) : null;
+    $('ds-hrmax').textContent = act.max_heartrate ? Math.round(act.max_heartrate) : '—';
+    $('ds-hrmax-unit').textContent = act.max_heartrate ? 'bpm' : '';
     $('ds-watts').textContent = avgW || '—';
     $('ds-watts-unit').textContent = avgW ? 'W' : '';
     renderMap(streams,act);
