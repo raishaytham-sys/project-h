@@ -1015,8 +1015,12 @@ function renderStreamCharts(streams, act) {
           callbacks: { title: c=>`${c[0].label} km`, label: fmtLabel }
         },
         zoom: {
-          pan: { enabled: true, mode: 'x' },
-          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+          zoom: {
+            drag: { enabled: true, backgroundColor: dk?'rgba(255,255,255,.07)':'rgba(31,45,92,.07)', borderColor: dk?'rgba(255,255,255,.25)':'rgba(31,45,92,.25)', borderWidth: 1 },
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
           limits: { x: { min: 'original', max: 'original' } }
         }
       },
@@ -1102,8 +1106,39 @@ function renderStreamCharts(streams, act) {
   // Heart Rate
   if (streams.heartrate?.length) {
     const ctx = document.getElementById('hrChart').getContext('2d');
-    const hrDS = { data:streams.heartrate, fill:true, backgroundColor:makeGrad(ctx,'#E53935'), borderColor:'#E53935', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
-    S._hrChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[hrDS]}, options: baseOpts(streams.heartrate, 'bpm', c=>`${Math.round(c.raw)} bpm`) });
+    const hrDS = { data:streams.heartrate, fill:false, borderColor:'#E53935', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
+    const MHR = 203;
+    const hrZones = [
+      { min:   0, max: Math.round(MHR*.60), color:'#5DBF8722' },
+      { min: Math.round(MHR*.60), max: Math.round(MHR*.70), color:'#8BC34A22' },
+      { min: Math.round(MHR*.70), max: Math.round(MHR*.80), color:'#FFD54F22' },
+      { min: Math.round(MHR*.80), max: Math.round(MHR*.90), color:'#FF8C5A28' },
+      { min: Math.round(MHR*.90), max: 230, color:'#E5393528' },
+    ];
+    const zoneBandsPlugin = {
+      id: 'zoneBands',
+      beforeDatasetsDraw(chart) {
+        const zones = chart.options.plugins?.zoneBands?.zones;
+        if (!zones) return;
+        const { ctx: c, chartArea: ca, scales: { y } } = chart;
+        c.save();
+        zones.forEach(({ min, max, color }) => {
+          const top    = Math.max(ca.top,    y.getPixelForValue(max));
+          const bottom = Math.min(ca.bottom, y.getPixelForValue(min));
+          if (bottom <= top) return;
+          c.fillStyle = color;
+          c.fillRect(ca.left, top, ca.right - ca.left, bottom - top);
+        });
+        c.restore();
+      }
+    };
+    const hrMin = Math.max(40, Math.min(...streams.heartrate) - 8);
+    const hrMax = Math.max(Math.max(...streams.heartrate) + 8, Math.round(MHR * .92));
+    const hrOpts = baseOpts(streams.heartrate, 'bpm', c=>`${Math.round(c.raw)} bpm`);
+    hrOpts.scales.y.min = hrMin;
+    hrOpts.scales.y.max = hrMax;
+    hrOpts.plugins.zoneBands = { zones: hrZones };
+    S._hrChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[hrDS]}, plugins:[zoneBandsPlugin], options: hrOpts });
     const avgHR2 = Math.round(streams.heartrate.reduce((a,b)=>a+b,0)/streams.heartrate.length);
     const maxHR2 = Math.round(Math.max(...streams.heartrate));
     $('hrStats').innerHTML = `<span class="elev-stat-mini">Avg <strong>${avgHR2} bpm</strong></span><span class="elev-stat-mini">Max <strong>${maxHR2} bpm</strong></span>`;
