@@ -103,7 +103,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .bars-inner{display:flex;flex-direction:column;height:100%}
 .chart-area{flex:1;position:relative;display:flex;align-items:flex-end;gap:5px;padding:8px 4px 0}
 .gridline{position:absolute;left:0;right:0;height:1px;background:var(--border);pointer-events:none}
-.bar-col{flex-shrink:0;width:32px;height:100%;position:relative;cursor:pointer}
+.bar-col{flex-shrink:0;width:32px;height:100%;position:relative;cursor:pointer;touch-action:pan-x}
 .bar-col:hover .bar-stack{filter:brightness(1.08)}
 .bar-stack{position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;border-radius:4px 4px 0 0;overflow:hidden;transition:height .4s ease,filter .15s}
 .bar-seg{width:100%;flex-shrink:0}
@@ -280,7 +280,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <span id="lbl-all">All</span>
         </button>
         <button class="type-btn" data-type="run" onclick="clickType('run',this)">
-          <svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="1.5"/><path d="M7 20l3.5-7 2 2.5L15 10l4 10"/><path d="M5 9l2.5 2.5"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="1.5"/><path d="M5 22l4-9 2.5 3 2.5-5 5 11"/><path d="M8.5 13L6 11l2.5-4 3 2"/></svg>
           <span id="lbl-run">Run</span>
         </button>
         <button class="type-btn" data-type="trail" onclick="clickType('trail',this)">
@@ -292,7 +292,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <span id="lbl-hike">Hike</span>
         </button>
         <button class="type-btn" data-type="bike" onclick="clickType('bike',this)">
-          <svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5.5M5.5 17.5L9 10l2 4h5.5L14 6"/><circle cx="14" cy="4" r="1"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3.5-3 4-4 2.5 3H19"/></svg>
           <span id="lbl-bike">Bike</span>
         </button>
       </div>
@@ -433,7 +433,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="elev-body"><canvas id="elevChart" height="140"></canvas></div>
     </div>
 
-    <div class="elev-card" style="margin-top:12px">
+    <div class="elev-card" id="paceCard" style="margin-top:12px">
       <div class="elev-hd">
         <span class="elev-hd-title" id="paceChartTitle">Pace</span>
       </div>
@@ -477,10 +477,10 @@ const RACE=new Date('2027-10-01T06:00:00');
 const CHART_H=180,BAR_W=32,BAR_GAP=5;
 const GROUPS={run:['Run','VirtualRun'],trail:['TrailRun'],hike:['Hike'],bike:['Ride','VirtualRide','EBikeRide','MountainBikeRide']};
 const ICONS={
-  run:'<circle cx="13" cy="4" r="1.5"/><path d="M7 20l3.5-7 2 2.5L15 10l4 10"/><path d="M5 9l2.5 2.5"/>',
+  run:'<circle cx="12" cy="4" r="1.5"/><path d="M5 22l4-9 2.5 3 2.5-5 5 11"/><path d="M8.5 13L6 11l2.5-4 3 2"/>',
   trail:'<path d="M3 17l4-7 3 4 3-5 4 8"/><path d="M3 20h18"/>',
   hike:'<path d="M3 20l5-10 4 6 3-4 6 8"/>',
-  bike:'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5.5M5.5 17.5L9 10l2 4h5.5L14 6"/><circle cx="14" cy="4" r="1"/>',
+  bike:'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3.5-3 4-4 2.5 3H19"/>',
 };
 
 // ── State ──────────────────────────────────────────────────────
@@ -641,11 +641,12 @@ function buildWeekData(){
   });
   return weeks;
 }
-function genTicks(max){
-  if(!max||max<0.01)return[0,25,50,75,100];
-  const mag=Math.pow(10,Math.floor(Math.log10(max)));
-  const step=Math.ceil(max/4/mag)*mag;
-  return[0,step,step*2,step*3,step*4];
+function genTicks(max) {
+    if (!max || max < 0.01) return [0, 25, 50, 75, 100];
+    const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
+    const niceMax = Math.ceil(max / magnitude) * magnitude;
+    const step = niceMax / 4;
+    return [0, step, step*2, step*3, step*4];
 }
 function fmtTick(v){
   if(S.metric==='km')return v<1000?v+'km':(v/1000).toFixed(0)+'k';
@@ -657,7 +658,7 @@ function renderChart(){
   const ca=$('chartArea'),xl=$('xLabels'),ya=$('yAxisCol'),bs=$('barsScroll');
   ca.innerHTML='';xl.innerHTML='';ya.innerHTML='';
   if(!data.length)return;
-  const maxV=Math.max(...data.map(w=>w.total),0.01);
+  const maxV = Math.max(...data.map(w => w.total).filter(v => v > 0), 1);
   const ticks=genTicks(maxV);const maxT=ticks[ticks.length-1]||1;
   [...ticks].reverse().forEach(tk=>{const el=document.createElement('div');el.className='y-tick';el.textContent=fmtTick(tk);ya.appendChild(el)});
   ticks.forEach((tk,i)=>{if(!i)return;const l=document.createElement('div');l.className='gridline';l.style.bottom=(tk/maxT*CHART_H)+'px';ca.appendChild(l)});
@@ -686,6 +687,21 @@ function renderChart(){
       tt.style.display='block';
     });
     col.addEventListener('mouseleave',()=>tt.style.display='none');
+    col.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const r = col.getBoundingClientRect();
+      const u = S.metric==='km'?'km':S.metric==='elev'?'m':'h';
+      const v = S.metric==='km'?w.total.toFixed(1):S.metric==='elev'?Math.round(w.total).toLocaleString():w.total.toFixed(1);
+      $('ttWeek').textContent = t('weekof')+' '+w.date.getDate()+'/'+(w.date.getMonth()+1);
+      $('ttVal').textContent = v+' '+u;
+      const tip = $('tooltip');
+      tip.style.left = (r.left + r.width/2) + 'px';
+      tip.style.top  = (r.top - 60) + 'px';
+      tip.style.display = 'block';
+    }, { passive: false });
+    col.addEventListener('touchend', () => {
+      setTimeout(() => $('tooltip').style.display='none', 1500);
+    });
     ca.appendChild(col);
     const lbl=document.createElement('div');lbl.className='x-label'+(w.key===curKey?' cur':'');lbl.style.width=BAR_W+'px';
     lbl.textContent=String(w.date.getDate()).padStart(2,'0')+'/'+(w.date.getMonth()+1);
@@ -910,73 +926,78 @@ function renderHR(streams,act){
 }
 
 function renderStreamCharts(streams, act) {
+  ['_paceChart','_hrChart','_wattsChart'].forEach(k => {
+    if (S[k]) { try { S[k].destroy(); } catch(e) {} S[k] = null; }
+  });
+
   const g = typeOf(act.type) || 'run';
   const isDark = document.documentElement.dataset.theme === 'dark';
-  const dists = streams.distance ? streams.distance.map(d => (d/1000).toFixed(2)) : [];
-  if (!dists.length) return;
-
-  const lineColor = isDark
+  const lineClr = isDark
     ? {run:'#4D70D8',trail:'#2AACC4',hike:'#3CB870',bike:'#C07848'}[g]
     : {run:'#2D4BAF',trail:'#1A7A8C',hike:'#2A7A50',bike:'#8C5530'}[g];
 
-  const chartOpts = (color, yLabel, callback) => ({
-    responsive: true,
-    animation: { duration: 400 },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: isDark ? '#0D1322' : '#FFF',
-        borderColor: isDark ? '#1C2A44' : '#E0E5EF',
-        borderWidth: 1,
-        padding: 10,
-        cornerRadius: 8,
-        titleFont: { family: 'Geist Mono', size: 11 },
-        bodyFont: { family: 'Geist Mono', size: 12 },
-        callbacks: { title: c => `${c[0].label} km`, label: callback }
-      }
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: isDark?'#3A4870':'#8896B4', font:{family:'Geist Mono',size:10}, maxTicksLimit:8 }, border:{display:false} },
-      y: { grid: { color: isDark?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)' }, ticks: { color: isDark?'#3A4870':'#8896B4', font:{family:'Geist Mono',size:10}, callback: v => v+' '+yLabel }, border:{display:false} }
-    }
-  });
+  const dists = streams.distance?.length
+    ? streams.distance.map(d => (d/1000).toFixed(2))
+    : streams.time?.length
+      ? streams.time.map((_,i) => ((i/streams.time.length)*(act.distance||10000)/1000).toFixed(2))
+      : [];
+
+  if (!dists.length) return;
 
   function makeGrad(ctx, color) {
-    const g = ctx.createLinearGradient(0,0,0,140);
-    g.addColorStop(0, color+'28'); g.addColorStop(1, color+'04'); return g;
+    const gr = ctx.createLinearGradient(0,0,0,140);
+    gr.addColorStop(0, color+'28'); gr.addColorStop(1, color+'04'); return gr;
   }
 
-  // Pace chart
+  function baseOpts(unit, fmtLabel) {
+    const dk = document.documentElement.dataset.theme === 'dark';
+    return {
+      responsive: true, animation: { duration: 400 },
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: dk?'#0D1322':'#FFF', borderColor: dk?'#1C2A44':'#E0E5EF', borderWidth:1,
+        padding:10, cornerRadius:8,
+        titleFont:{family:'Geist Mono',size:11}, bodyFont:{family:'Geist Mono',size:12},
+        callbacks: { title: c=>`${c[0].label} km`, label: fmtLabel }
+      }},
+      scales: {
+        x: { grid:{display:false}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},maxTicksLimit:8}, border:{display:false} },
+        y: { grid:{color:dk?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},callback:v=>v+' '+unit}, border:{display:false} }
+      }
+    };
+  }
+
+  // Pace / Speed
+  const isBike = g === 'bike';
+  document.getElementById('paceChartTitle').textContent = isBike ? 'Speed' : 'Pace';
+  document.getElementById('paceCard').style.display = streams.velocity_smooth?.length ? '' : 'none';
   if (streams.velocity_smooth?.length) {
-    const isBike = g === 'bike';
     const paceData = isBike
-      ? streams.velocity_smooth.map(v => Math.round((v||0) * 3.6 * 10) / 10)
+      ? streams.velocity_smooth.map(v => v ? Math.round(v*3.6*10)/10 : null)
       : streams.velocity_smooth.map(v => {
           if (!v || v < 0.1) return null;
-          const spk = 1000 / v;
-          return Math.round(spk / 6) / 10;
+          return Math.round((1000/v)/6)/10;
         });
     const ctx = document.getElementById('paceChart').getContext('2d');
-    document.getElementById('paceChartTitle').textContent = isBike ? 'Speed' : 'Pace';
-    new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:paceData, fill:true, backgroundColor:makeGrad(ctx,lineColor), borderColor:lineColor, borderWidth:1.8, pointRadius:0, tension:.3, spanGaps:true }] }, options: chartOpts(lineColor, isBike?'km/h':'min/km', c => isBike ? `${c.raw} km/h` : `${c.raw} min/km`) });
+    S._paceChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:paceData, fill:true, backgroundColor:makeGrad(ctx,lineClr), borderColor:lineClr, borderWidth:1.8, pointRadius:0, tension:.3, spanGaps:true }]}, options: baseOpts(isBike?'km/h':'min/km', c => c.raw ? (isBike?`${c.raw} km/h`:`${c.raw} min/km`) : '') });
   }
 
-  // HR chart
+  // Heart Rate
   if (streams.heartrate?.length) {
     const ctx = document.getElementById('hrChart').getContext('2d');
-    new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:streams.heartrate, fill:true, backgroundColor:makeGrad(ctx,'#E53935'), borderColor:'#E53935', borderWidth:1.8, pointRadius:0, tension:.3 }] }, options: chartOpts('#E53935', 'bpm', c => `${Math.round(c.raw)} bpm`) });
+    S._hrChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:streams.heartrate, fill:true, backgroundColor:makeGrad(ctx,'#E53935'), borderColor:'#E53935', borderWidth:1.8, pointRadius:0, tension:.3 }]}, options: baseOpts('bpm', c => `${Math.round(c.raw)} bpm`) });
   }
 
-  // Watts chart
+  // Watts
+  const wattsArr2 = streams.watts?.filter(w => w > 0) || [];
   const wattsCard = document.getElementById('wattsCard');
-  if (streams.watts?.length && streams.watts.some(w => w > 0)) {
+  if (wattsArr2.length) {
     wattsCard.style.display = '';
-    const ctx = document.getElementById('wattsChart').getContext('2d');
     const smoothW = streams.watts.map((w,i,arr) => {
-      const slice = arr.slice(Math.max(0,i-5), i+6);
-      return Math.round(slice.reduce((a,b)=>a+b,0)/slice.length);
+      const sl = arr.slice(Math.max(0,i-5),i+6);
+      return Math.round(sl.reduce((a,b)=>a+b,0)/sl.length);
     });
-    new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:smoothW, fill:true, backgroundColor:makeGrad(ctx,'#9B59B6'), borderColor:'#9B59B6', borderWidth:1.8, pointRadius:0, tension:.3 }] }, options: chartOpts('#9B59B6', 'W', c => `${Math.round(c.raw)} W`) });
+    const ctx = document.getElementById('wattsChart').getContext('2d');
+    S._wattsChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[{ data:smoothW, fill:true, backgroundColor:makeGrad(ctx,'#9B59B6'), borderColor:'#9B59B6', borderWidth:1.8, pointRadius:0, tension:.3 }]}, options: baseOpts('W', c => `${Math.round(c.raw)} W`) });
   } else {
     wattsCard.style.display = 'none';
   }

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import requests
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
 app = FastAPI()
@@ -46,37 +47,44 @@ def get_activities(type: str = "all", weeks: int = 24):
     
     return activities
 
+def extract_gpx_coords(gpx_text):
+    try:
+        root = ET.fromstring(gpx_text)
+        coords = []
+        for pt in root.findall('.//{*}trkpt'):
+            coords.append([float(pt.get('lat')), float(pt.get('lon'))])
+        return coords
+    except Exception as e:
+        print(f"[GPX parse error] {e}")
+        return []
+
 @app.get("/api/activity/{activity_id}/streams")
 def get_streams(activity_id: str):
     url = f"{BASE_URL}/activity/{activity_id}/streams"
     params = {"types": "time,latlng,altitude,heartrate,distance,velocity_smooth,watts,cadence"}
     response = requests.get(url, auth=AUTH, params=params)
-    normalized = {"latlng": [], "altitude": [], "heartrate": [], "distance": [], "time": [], "watts": [], "velocity_smooth": []}
-
-    print(f"[streams] {activity_id} — HTTP {response.status_code}, body length: {len(response.text)}")
-
-    if not response.text.strip():
-        print(f"[streams] {activity_id} — réponse vide")
-        return normalized
-
-    try:
-        raw = response.json()
-    except Exception as e:
-        print(f"[streams] {activity_id} — JSON decode error: {e}, body: {response.text[:200]}")
-        return normalized
-
+    raw = response.json() if response.status_code == 200 else {}
     if isinstance(raw, list):
-        for item in raw:
-            key = item.get("type")
-            if key in normalized:
-                normalized[key] = item.get("data", [])
+        result = {item['type']: item['data'] for item in raw if 'type' in item and 'data' in item}
     elif isinstance(raw, dict):
-        for key in normalized:
-            if key in raw:
-                normalized[key] = raw[key]
-
-    print(f"[streams] {activity_id} — keys présentes: {[k for k,v in normalized.items() if v]}")
-    return normalized
+        result = raw
+    else:
+        result = {}
+    for key in ['latlng','altitude','heartrate','distance','time','velocity_smooth','watts','cadence']:
+        if key not in result:
+            result[key] = []
+    print(f"[streams] {activity_id} — keys: {[k for k,v in result.items() if v]}")
+    if not result.get('latlng'):
+        try:
+            gpx_resp = requests.get(f"{BASE_URL}/activity/{activity_id}/gpx", auth=AUTH)
+            if gpx_resp.status_code == 200:
+                coords = extract_gpx_coords(gpx_resp.text)
+                if coords:
+                    result['latlng'] = coords
+                    print(f"[GPX fallback] {len(coords)} points")
+        except Exception as e:
+            print(f"[GPX fallback error] {e}")
+    return result
 
 @app.get("/api/activity/{activity_id}")
 def get_activity_detail(activity_id: str):
