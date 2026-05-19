@@ -183,7 +183,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .detail-act-type svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
 .detail-act-name{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px;margin-bottom:2px}
 .detail-act-date{font-family:'Geist Mono',monospace;font-size:12px;color:var(--text3)}
-.stats-strip{display:grid;grid-template-columns:repeat(8,1fr);background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.stats-strip{display:grid;grid-template-columns:repeat(7,1fr);background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
 .ds-cell{background:var(--surface);padding:16px 18px;border-right:1px solid var(--border)}
 .ds-cell:last-child{border-right:none}
 .ds-icon{width:26px;height:26px;border-radius:5px;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
@@ -282,7 +282,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <span id="lbl-all">All</span>
         </button>
         <button class="type-btn" data-type="run" onclick="clickType('run',this)">
-          <svg viewBox="0 0 24 24"><circle cx="14" cy="3.5" r="1.5"/><path d="M12 5.5 L9 12 L5 21 M9 12 L14 17 L17 21"/><path d="M11 7 L8 9 M12 7 L16 5"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5"/></svg>
           <span id="lbl-run">Run</span>
         </button>
         <button class="type-btn" data-type="trail" onclick="clickType('trail',this)">
@@ -400,12 +400,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="stats-strip">
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="ds-val" id="ds-dist">—</div><span class="ds-unit" id="ds-dist-unit">km</span><div class="ds-lbl" id="lbl-dist">Distance</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg></div><div class="ds-val" id="ds-elev">—</div><span class="ds-unit" id="ds-elev-unit">m</span><div class="ds-lbl" id="lbl-elev">Elevation</div></div>
+      <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg></div><div class="ds-val" id="ds-desc">—</div><span class="ds-unit" id="ds-desc-unit">m</span><div class="ds-lbl" id="lbl-desc">Descent</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="ds-val" id="ds-time">—</div><span class="ds-unit" id="ds-time-unit">h</span><div class="ds-lbl" id="lbl-dur">Duration</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="ds-val" id="ds-pace">—</div><span class="ds-unit" id="ds-pace-unit">/km</span><div class="ds-lbl" id="lbl-pace">Pace</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div class="ds-val" id="ds-hr">—</div><span class="ds-unit" id="ds-hr-unit">bpm</span><div class="ds-lbl" id="lbl-avghr">Avg HR</div></div>
-      <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><path d="M4 5 L20 16 M14 13 L20 16 L17 10"/></svg></div><div class="ds-val" id="ds-desc">—</div><span class="ds-unit" id="ds-desc-unit">m</span><div class="ds-lbl" id="lbl-desc">Descent</div></div>
       <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="ds-val" id="ds-watts">—</div><span class="ds-unit" id="ds-watts-unit"></span><div class="ds-lbl">Avg W</div></div>
-      <div class="ds-cell"><div class="ds-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="ds-val" id="ds-wattsmax">—</div><span class="ds-unit" id="ds-wattsmax-unit"></span><div class="ds-lbl">Max W</div></div>
     </div>
 
     <div class="detail-panels">
@@ -486,7 +485,7 @@ const RACE=new Date('2027-10-01T06:00:00');
 const CHART_H=180,BAR_W=32,BAR_GAP=5;
 const GROUPS={run:['Run','VirtualRun'],trail:['TrailRun'],hike:['Hike'],bike:['Ride','VirtualRide','EBikeRide','MountainBikeRide']};
 const ICONS={
-  run:'<circle cx="14" cy="3.5" r="1.5"/><path d="M12 5.5 L9 12 L5 21 M9 12 L14 17 L17 21"/><path d="M11 7 L8 9 M12 7 L16 5"/>',
+  run:'<circle cx="15" cy="4" r="1.8"/><path d="M14 6 L10 13 L13 17 L10 22 M10 13 L6 21 M13 8 L11 11 L14 13 M13 8 L9 5"/>',
   trail:'<path d="M3 17l4-7 3 4 3-5 4 8"/><path d="M3 20h18"/>',
   hike:'<path d="M3 20l5-10 4 6 3-4 6 8"/>',
   bike:'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3.5-3 4-4 2.5 3H19"/>',
@@ -860,8 +859,6 @@ async function openDetail(id){
     const maxW = wattsArr.length ? Math.round(Math.max(...wattsArr)) : null;
     $('ds-watts').textContent = avgW || '—';
     $('ds-watts-unit').textContent = avgW ? 'W' : '';
-    $('ds-wattsmax').textContent = maxW || '—';
-    $('ds-wattsmax-unit').textContent = maxW ? 'W' : '';
     renderMap(streams,act);
     renderElev(streams,act);
     renderHR(streams,act);
@@ -996,7 +993,7 @@ function renderStreamCharts(streams, act) {
     gr.addColorStop(0, color+'28'); gr.addColorStop(1, color+'04'); return gr;
   }
 
-  const baseOpts = (data, unit, fmtLabel) => {
+  const baseOpts = (data, unit, fmtLabel, yFmt) => {
     const dk = document.documentElement.dataset.theme === 'dark';
     const range = yRange(data);
     return {
@@ -1031,7 +1028,7 @@ function renderStreamCharts(streams, act) {
       },
       scales: {
         x: { grid:{display:false}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},maxTicksLimit:8}, border:{display:false} },
-        y: { min:range.min, max:range.max, grid:{color:dk?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},callback:v=>v+' '+unit}, border:{display:false} }
+        y: { min:range.min, max:range.max, grid:{color:dk?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}, ticks:{color:dk?'#3A4870':'#8896B4',font:{family:'Geist Mono',size:10},callback:yFmt||(v=>Math.round(v)+' '+unit)}, border:{display:false} }
       }
     };
   };
@@ -1064,7 +1061,10 @@ function renderStreamCharts(streams, act) {
     });
     const ctx = document.getElementById('paceChart').getContext('2d');
     const paceDS = { data:paceData, fill:true, backgroundColor:makeGrad(ctx,lineClr), borderColor:lineClr, borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3, spanGaps:true };
-    S._paceChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[paceDS]}, options: baseOpts(paceData, isBike?'km/h':'min/km', c => c.raw ? (isBike?`${c.raw} km/h`:`${c.raw} min/km`) : '') });
+    const paceYFmt = isBike
+      ? v => v.toFixed(1) + ' km/h'
+      : v => { const m=Math.floor(v), s=Math.round((v-m)*60); return `${m}:${String(s).padStart(2,'0')}`; };
+    S._paceChart = new Chart(ctx, { type:'line', data:{ labels:dists, datasets:[paceDS]}, options: baseOpts(paceData, isBike?'km/h':'min/km', c => c.raw ? (isBike?`${c.raw} km/h`:`${c.raw} min/km`) : '', paceYFmt) });
     const validPace = paceData.filter(v=>v!==null);
     if (validPace.length) {
       const avgP = validPace.reduce((a,b)=>a+b,0)/validPace.length;
@@ -1126,11 +1126,11 @@ function renderStreamCharts(streams, act) {
     const hrDS = { data:streams.heartrate, fill:false, borderColor:'#E53935', borderWidth:1.8, pointRadius:0, pointHoverRadius:0, pointStyle:false, tension:.3 };
     const MHR = 203;
     const hrZones = [
-      { min:   0,              max: Math.round(MHR*.60) },
-      { min: Math.round(MHR*.60), max: Math.round(MHR*.70) },
-      { min: Math.round(MHR*.70), max: Math.round(MHR*.80) },
-      { min: Math.round(MHR*.80), max: Math.round(MHR*.90) },
-      { min: Math.round(MHR*.90), max: 230 },
+      { min:   0,              max: Math.round(MHR*.60), color:'rgba(99,179,237,.16)'  },
+      { min: Math.round(MHR*.60), max: Math.round(MHR*.70), color:'rgba(104,211,145,.16)' },
+      { min: Math.round(MHR*.70), max: Math.round(MHR*.80), color:'rgba(246,173,85,.17)'  },
+      { min: Math.round(MHR*.80), max: Math.round(MHR*.90), color:'rgba(252,129,74,.19)'  },
+      { min: Math.round(MHR*.90), max: 230,                 color:'rgba(252,75,75,.21)'   },
     ];
     const zoneBandsPlugin = {
       id: 'zoneBands',
@@ -1140,16 +1140,16 @@ function renderStreamCharts(streams, act) {
         const { ctx: c, chartArea: ca, scales: { y } } = chart;
         const dk = document.documentElement.dataset.theme === 'dark';
         c.save();
-        const grad = c.createLinearGradient(0, ca.top, 0, ca.bottom);
-        grad.addColorStop(0,    dk ? 'rgba(229,57,53,.13)'   : 'rgba(229,57,53,.09)');
-        grad.addColorStop(0.35, dk ? 'rgba(255,140,60,.06)'  : 'rgba(255,140,60,.05)');
-        grad.addColorStop(0.7,  dk ? 'rgba(255,210,60,.03)'  : 'rgba(255,210,60,.03)');
-        grad.addColorStop(1,    dk ? 'rgba(80,200,140,.015)' : 'rgba(80,200,140,.01)');
-        c.fillStyle = grad;
-        c.fillRect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
-        c.setLineDash([3, 4]);
-        c.lineWidth = 0.75;
-        c.strokeStyle = dk ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.07)';
+        zones.forEach(({ min, max, color }) => {
+          const top    = Math.max(ca.top,    y.getPixelForValue(max));
+          const bottom = Math.min(ca.bottom, y.getPixelForValue(min));
+          if (bottom <= top) return;
+          c.fillStyle = color;
+          c.fillRect(ca.left, top, ca.right - ca.left, bottom - top);
+        });
+        c.setLineDash([4, 4]);
+        c.lineWidth = 1;
+        c.strokeStyle = dk ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.10)';
         zones.slice(0, -1).forEach(({ max }) => {
           const py = y.getPixelForValue(max);
           if (py < ca.top || py > ca.bottom) return;
