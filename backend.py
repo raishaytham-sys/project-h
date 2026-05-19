@@ -49,8 +49,34 @@ def get_activities(type: str = "all", weeks: int = 24):
 @app.get("/api/activity/{activity_id}/streams")
 def get_streams(activity_id: str):
     url = f"{BASE_URL}/activity/{activity_id}/streams"
-    response = requests.get(url, auth=AUTH)
-    return response.json()
+    params = {"types": "time,latlng,altitude,heartrate,distance,velocity_smooth,watts,cadence"}
+    response = requests.get(url, auth=AUTH, params=params)
+    normalized = {"latlng": [], "altitude": [], "heartrate": [], "distance": [], "time": [], "watts": [], "velocity_smooth": []}
+
+    print(f"[streams] {activity_id} — HTTP {response.status_code}, body length: {len(response.text)}")
+
+    if not response.text.strip():
+        print(f"[streams] {activity_id} — réponse vide")
+        return normalized
+
+    try:
+        raw = response.json()
+    except Exception as e:
+        print(f"[streams] {activity_id} — JSON decode error: {e}, body: {response.text[:200]}")
+        return normalized
+
+    if isinstance(raw, list):
+        for item in raw:
+            key = item.get("type")
+            if key in normalized:
+                normalized[key] = item.get("data", [])
+    elif isinstance(raw, dict):
+        for key in normalized:
+            if key in raw:
+                normalized[key] = raw[key]
+
+    print(f"[streams] {activity_id} — keys présentes: {[k for k,v in normalized.items() if v]}")
+    return normalized
 
 @app.get("/api/activity/{activity_id}")
 def get_activity_detail(activity_id: str):
