@@ -65,7 +65,21 @@ def get_streams(activity_id: str):
     response = requests.get(url, auth=AUTH, params=params)
     raw = response.json() if response.status_code == 200 else {}
     if isinstance(raw, list):
-        result = {item['type']: item['data'] for item in raw if 'type' in item and 'data' in item}
+        result = {}
+        for item in raw:
+            if 'type' not in item or 'data' not in item:
+                continue
+            key = item['type']
+            if key == 'latlng' and item.get('data2'):
+                lats = item['data']
+                lngs = item['data2']
+                result[key] = [
+                    [lats[i], lngs[i]]
+                    for i in range(min(len(lats), len(lngs)))
+                    if lats[i] is not None and lngs[i] is not None
+                ]
+            else:
+                result[key] = item['data']
     elif isinstance(raw, dict):
         result = raw
     else:
@@ -77,11 +91,18 @@ def get_streams(activity_id: str):
     if not result.get('latlng'):
         try:
             gpx_resp = requests.get(f"{BASE_URL}/activity/{activity_id}/gpx", auth=AUTH)
-            if gpx_resp.status_code == 200:
+            print(f"[GPX] status={gpx_resp.status_code} len={len(gpx_resp.text)}")
+            if gpx_resp.status_code == 200 and len(gpx_resp.text) > 100:
                 coords = extract_gpx_coords(gpx_resp.text)
+                print(f"[GPX] coords parsed: {len(coords)}")
                 if coords:
                     result['latlng'] = coords
-                    print(f"[GPX fallback] {len(coords)} points")
+            if not result.get('latlng'):
+                fit_resp = requests.get(
+                    f"https://intervals.icu/api/v1/activity/{activity_id}/fit",
+                    auth=AUTH
+                )
+                print(f"[FIT] status={fit_resp.status_code}")
         except Exception as e:
             print(f"[GPX fallback error] {e}")
     return result
