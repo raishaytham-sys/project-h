@@ -1,0 +1,18 @@
+app = "project-h"
+primary_region = "cdg"
+
+[build]
+  [build.args]
+    PYTHON_VERSION = "3.11"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
